@@ -13,9 +13,15 @@ class PeopleHandBookController extends \yii\web\Controller
     {
         return $this->render('index');
     }
+    #region Список методов контроллера
+        // actionAddEditPeople - метод добавления/редактирования людей
+        // actionFindPeople - выгрузить весь массив людей, если не передана дата
+        // actionDeletePeople - функция для удаления людей по идентификатору
+        // actionTest - Метод для тестирования
+    #endregion
 
     /**
-     * actionAddPeople - метод добавления людей
+     * actionAddEditPeople - метод добавления/редактирования людей
      * Входные данные:
      *      people_id           - идентификатор человека
      *      name                - Имя человека
@@ -86,7 +92,7 @@ class PeopleHandBookController extends \yii\web\Controller
     }
 
     /**
-     * FindPeople - выгрузить весь массив людей, если не передана дата
+     * actionFindPeople - выгрузить весь массив людей, если не передана дата
      * Входные данные:
      *      date_registration - поиск людей до переданной даты
      *
