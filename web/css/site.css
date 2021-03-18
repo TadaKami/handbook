@@ -113,3 +113,28 @@ a.desc:after {
 .nav > li > form > button.logout:focus {
     outline: none;
 }
+
+.table{
+    border: 1px solid #eee;
+    table-layout: fixed;
+    /*width: 100%;*/
+    margin-bottom: 20px;
+}
+.thead{
+    background: #efefef;
+}
+
+.table_row{
+    font-weight: bold;
+    padding: 5px;
+    border: 1px solid #dddddd;
+    width: 100%;
+
+}
+
+.table_cell {
+    padding: 5px 10px;
+    border: 1px solid #eee;
+    text-align: center;
+    /*width: 100%;*/
+}
