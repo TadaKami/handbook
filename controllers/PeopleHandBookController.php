@@ -27,7 +27,7 @@ class PeopleHandBookController extends \yii\web\Controller
      *      name                - Имя человека
      *      second_name         - Фамилия человека
      *      address             - Адрес проживания
-     *      date_registration   - Дата регистрации
+     *      date_birthday       - Дата регистрации
      * @return array[]
      */
     public function actionAddEditPeople()
@@ -67,7 +67,7 @@ class PeopleHandBookController extends \yii\web\Controller
              *      Да?     Конвертируем в формат даты MySQL и записываем в поле даты регистрации
              *      Нет?    В поле даты регистрации записываем текущую дату
              */
-            $people->date_registration = (isset($post_data['date_registration']) && !empty($post_data['date_registration']))?date('Y-m-d',strtotime($post_data['date_registration'])):date('Y-m-d');
+            $people->date_birthday = (isset($post_data['date_birthday']) && !empty($post_data['date_birthday']))?date('Y-m-d',strtotime($post_data['date_birthday'])):date('Y-m-d');
             if(!$people->save()){
                 throw new Exception($people->getErrors());
             }
@@ -76,7 +76,7 @@ class PeopleHandBookController extends \yii\web\Controller
             $data['name'] = $people->name;
             $data['second_name'] = $people->second_name;
             $data['address'] = $people->address;
-            $data['date_registration'] = $people->date_registration;
+            $data['date_birthday'] = $people->date_birthday;
             unset($people, $post_data);
 
         } catch (\Throwable $exception) {
@@ -94,36 +94,53 @@ class PeopleHandBookController extends \yii\web\Controller
     /**
      * actionFindPeople - выгрузить весь массив людей, если не передана дата
      * Входные данные:
-     *      date_registration - поиск людей до переданной даты
+     *      date_birthday - поиск людей до переданной даты
      *
      * Выходные данные:
      *      people_id           - идентификатор человека
      *      name                - Имя человека
      *      second_name         - Фамилия человека
      *      address             - Адрес проживания
-     *      date_registration   - Дата регистрации
-     * @param null $date_registration - Дата регистрации
+     *      date_birthday       - Дата регистрации
+     * @param null $date_birthday - Дата регистрации
      * @return array
      */
-    public function actionFindPeople($date_registration = null)
+    public function actionFindPeople($date_birthday = null)
     {
         $data = array();
         $errors = array();
+        $date_birthday=null;
         try {
-            if(isset($_GET['date_registration']) || !empty($_GET['date_registration'])){
-                $date_registration = date('Y-m-d',strtotime($_GET['date_registration']));
+            if(isset($_GET['date_birthday']) && !empty($_GET['date_birthday'])){
+                $date_birthday = date('Y-m-d',strtotime($_GET['date_birthday']));
             }
-            $data = PeopleHandbook::find()
-                ->select(['id as people_id', 'name', 'second_name', 'date_registration'])
-                ->filterWhere(['date_registration'=>$date_registration])
+            $peoples_handbook = PeopleHandbook::find()
+                ->select(['id as people_id', 'name', 'second_name', 'date_birthday'])
+                ->filterWhere(['<=','date_birthday',$date_birthday])
                 ->asArray()
                 ->all();
+            if(empty($peoples_handbook)){
+                throw new Exception('Ничего не найдено');
+            }
+            $counter = 0;
+            foreach ($peoples_handbook as $people) {
+                $data[$counter]['#'] = $people['people_id'];
+                $data[$counter]['Имя'] = $people['name'];
+                $data[$counter]['Фамилия'] = $people['second_name'];
+                $data[$counter]['Дата рождения'] = $people['date_birthday'];
+                $counter++;
+            }
+
         } catch (\Throwable $exception) {
             $errors[] = 'Method ' . __FUNCTION__ . ' generate exception';
             $errors[] = $exception->getMessage();
             $errors[] = $exception->getLine();
         }
-        return array('data' => $data, 'errors' => $errors);
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return [
+            'data' => $data,
+            'errors' => $errors,
+        ];
     }
 
     /**
@@ -154,17 +171,17 @@ class PeopleHandBookController extends \yii\web\Controller
     {
         $data = array();
         $errors = array();
-        $date_registration = null;
+        $date_birthday = null;
         try {
-            if(isset($_GET['date_registration']) && !empty($_GET['date_registration'])){
+            if(isset($_GET['date_birthday']) && !empty($_GET['date_birthday'])){
 
-                $date_registration = date('Y-m-d',strtotime($_GET['date_registration']));
+                $date_birthday = date('Y-m-d',strtotime($_GET['date_birthday']));
             }else{
-                $date_registration = null;
+                $date_birthday = null;
             }
             $peoples_handbook = PeopleHandbook::find()
-                ->select(['id as people_id', 'name', 'second_name', 'date_registration'])
-                ->filterWhere(['<=','date_registration',$date_registration])
+                ->select(['id as people_id', 'name', 'second_name', 'date_birthday'])
+                ->filterWhere(['<=','date_birthday',$date_birthday])
                 ->asArray()
                 ->all();
             $counter = 0;
@@ -172,7 +189,7 @@ class PeopleHandBookController extends \yii\web\Controller
                 $data[$counter]['#'] = $people['people_id'];
                 $data[$counter]['Имя'] = $people['name'];
                 $data[$counter]['Фамилия'] = $people['second_name'];
-                $data[$counter]['Дата регистрации'] = $people['date_registration'];
+                $data[$counter]['Дата рождения'] = $people['date_birthday'];
                 $counter++;
             }
 

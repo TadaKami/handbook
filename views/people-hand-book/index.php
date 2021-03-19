@@ -13,6 +13,10 @@ $this->title = 'Add people to handbook';
 
     <label for="address">Address</label>
     <input type="text" class="form-control" placeholder="Enter ur address" id="address">
+
+    <label for="date_birthday">Выберите дату до которой нужно показать справочник зарегестрированных людей:</label>
+    <input type="date" class="form-control" id="date_birthday" name="trip-start">
+
     <button class="btn btn-primary" onclick="AddPeople()">Add</button>
 </div>
 <div id="success"></div>

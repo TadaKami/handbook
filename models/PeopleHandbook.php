@@ -10,8 +10,8 @@ use Yii;
  * @property int $id
  * @property string|null $name Имя
  * @property string|null $second_name Фамилия
- * @property string|null $address Адрес
- * @property string $date_registration Дата регистрации
+ * @property string $address Адрес
+ * @property string $date_birthday Дата рождения
  */
 class PeopleHandbook extends \yii\db\ActiveRecord
 {
@@ -29,9 +29,10 @@ class PeopleHandbook extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_registration'], 'required'],
-            [['date_registration'], 'safe'],
+            [['address', 'date_birthday'], 'required'],
+            [['date_birthday'], 'safe'],
             [['name', 'second_name', 'address'], 'string', 'max' => 255],
+            [['name', 'second_name'], 'unique', 'targetAttribute' => ['name', 'second_name']],
         ];
     }
 
@@ -45,7 +46,7 @@ class PeopleHandbook extends \yii\db\ActiveRecord
             'name' => 'Имя',
             'second_name' => 'Фамилия',
             'address' => 'Адрес',
-            'date_registration' => 'Дата регистрации',
+            'date_birthday' => 'Дата рождения',
         ];
     }
 }

@@ -40,7 +40,6 @@ AppAsset::register($this);
         'items' => [
             ['label' => 'Главная', 'url' => ['/site/index']],
             ['label' => 'Добавить человека', 'url' => ['/people-hand-book/index']],
-            ['label' => 'Test', 'url' => ['/people-hand-book/test']],
 
         ],
     ]);
