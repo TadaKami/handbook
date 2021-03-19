@@ -71,7 +71,9 @@ function generateTable(peoples, thead_data, div_table){
  * После загрузки страницы вызываем метод заполнения таблицы
  */
 $(document).ready(function (){
-    LoaderTable();
+    if (document.getElementById('table') != null){
+        LoaderTable();
+    }
 })
 
 /**
