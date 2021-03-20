@@ -40,7 +40,8 @@ function generateTable(peoples, thead_data, div_table){
     let row = header.insertRow(0);
     row.classList.add('table_row');
     row.classList.add('thead');
-
+    thead_data.reverse();
+    peoples.reverse();
     for (let i=0;i < thead_data.length;i++){
         let header_data = thead_data[i];
         var cell = row.insertCell(0);
@@ -56,6 +57,7 @@ function generateTable(peoples, thead_data, div_table){
     for(let j = 0;j < peoples.length; j++){
         let row_people = tbody.insertRow(0);
         row_people.classList.add('table_row');
+
         for (let i = 0;i < thead_data.length;i++){
             let header_data = thead_data[i];
             let people_column = row_people.insertCell(0);
