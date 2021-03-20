@@ -14,11 +14,10 @@ async function LoaderTable(){
     };
     if (response.ok){
         let json = await response.json();
-        console.log(json);
         let peoples = json.data;
         let div_table = document.getElementById('table');
         div_table.innerHTML = ''; // предварительная очистка таблицы
-        if (peoples.length == 0){в
+        if (peoples.length == 0){
             alert('Данных нету');
         }else {
             generateTable(peoples, Object.keys(peoples[0]),div_table);
@@ -89,7 +88,6 @@ async function AddPeople(){
 
     let div_success = document.getElementById('success');
     div_success.innerHTML = '';
-    console.log(date_birthday);
     if(date_birthday == ""){
 
         let div = document.createElement('div');
