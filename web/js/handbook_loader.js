@@ -18,7 +18,7 @@ async function LoaderTable(){
         let peoples = json.data;
         let div_table = document.getElementById('table');
         div_table.innerHTML = ''; // предварительная очистка таблицы
-        if (peoples.length == 0){
+        if (peoples.length == 0){в
             alert('Данных нету');
         }else {
             generateTable(peoples, Object.keys(peoples[0]),div_table);
