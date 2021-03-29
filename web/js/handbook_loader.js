@@ -22,6 +22,7 @@ async function LoaderTable(){
         }else {
             generateTable(peoples, Object.keys(peoples[0]),div_table);
         }
+
     }
 }
 
@@ -35,18 +36,17 @@ function generateTable(peoples, thead_data, div_table){
 
     let table = document.createElement('table');
     table.classList.add('table');
+    table.id = 'TEST_DINAMIC';
 
     let header = table.createTHead();
-    let row = header.insertRow(0);
+    let row = header.insertRow(-1);
     row.classList.add('table_row');
     row.classList.add('thead');
-    thead_data.reverse();
-    peoples.reverse();
     for (let i=0;i < thead_data.length;i++){
         let header_data = thead_data[i];
-        var cell = row.insertCell(0);
+        let cell = row.insertCell(-1);
         cell.classList.add('table_cell');
-        cell.innerHTML = header_data;
+        cell.innerHTML = header_data?header_data:'+++';
     }
 
     let tbody = table.createTBody();
@@ -54,15 +54,61 @@ function generateTable(peoples, thead_data, div_table){
      * Перебор всех людей
      * Для каожого человека перебираем все реквизиты
      */
+
     for(let j = 0;j < peoples.length; j++){
-        let row_people = tbody.insertRow(0);
+        let row_people = tbody.insertRow(-1);
         row_people.classList.add('table_row');
 
-        for (let i = 0;i < thead_data.length;i++){
+        for (let i = 0;i < thead_data.length+2;i++){
             let header_data = thead_data[i];
-            let people_column = row_people.insertCell(0);
+            let people_column = row_people.insertCell(-1);
+            row_people.id = peoples[j]['#'];
             people_column.classList.add('table_cell');
-            people_column.innerHTML = peoples[j][header_data];
+            // people_column.id = peoples[j]['#'];
+            if(peoples[j][header_data] == null){
+                switch (i) {
+                    case 5:
+                        people_column.innerHTML = '<button>del</button>';
+                        people_column.id = 'DEL';
+                        people_column.onclick = function (){
+
+                            let url = 'http://handbook/web/people-hand-book/delete-people?people_id='+peoples[j]['#'];
+
+                            let response = fetch(url);
+                            let json = {
+                                'data':{},
+                                'errors':{}
+                            };
+                            let tr = document.getElementById(peoples[j]['#']);
+                            tr.remove();
+
+                        }
+                        console.log('DEL');
+                        break;
+                    case 6:
+                        people_column.innerHTML = '<button>edit</button>';
+                        people_column.id = 'EDIT';
+                        people_column.onclick = function (){
+                            $.ajax({
+                                type : "POST",
+                                url : '/web/people-hand-book/compat-edit-data',
+                                data: {
+                                    people_id: peoples[j]['#'],
+                                    name: peoples[j]['Имя'],
+                                    second_name: peoples[j]['Фамилия'],
+                                    address: peoples[j]['Адрес'],
+                                    date_birthday: peoples[j]['Дата рождения']},
+                                success  : function(response) {
+                                }
+                            });
+                        }
+                        console.log('EDIT');
+                        break;
+
+                }
+            }else{
+                people_column.innerHTML = peoples[j][header_data];
+            }
         }
     }
     div_table.appendChild(table);
@@ -87,6 +133,7 @@ async function AddPeople(){
     let second_name = document.getElementById('second_name').value;
     let address = document.getElementById('address').value;
     let date_birthday = document.getElementById('date_birthday').value; // заготовка под редактирование
+    let people_id = document.getElementById('people_id').value;
 
     let div_success = document.getElementById('success');
     div_success.innerHTML = '';
@@ -98,15 +145,20 @@ async function AddPeople(){
         div.classList.add('alert-danger');
         div_success.appendChild(div);
     }else{
-        /**
-         * Запорос на метод добавления/редактирования
-         * @type {Response}
-         */
-        let response = await fetch(
-            'http://handbook/web/people-hand-book/add-edit-people?name='+name
-            +'&second_name='+second_name
-            +'&address='+address
-            +'&date_birthday='+date_birthday);
+        let json_data = {
+                people_id: people_id,
+                name: name,
+                second_name: second_name,
+                address: address,
+                date_birthday: date_birthday
+        };
+        let response = await fetch('http://handbook/web/people-hand-book/add-edit-people',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(json_data)
+        });
         let result = await response.json();
 
         let div = document.createElement('div');
@@ -119,24 +171,33 @@ async function AddPeople(){
          *                  Нет?    Добавляем уведомление о том, какая ошибка произошла в сохранении нового человека
          */
         if (response.ok){
-            /**
-             * Очистка инпутов
-             * @type {string}
-             */
-            document.getElementById('name').value = "";
-            document.getElementById('second_name').value = "";
-            document.getElementById('address').value = "";
-
             if (result.errors.length == 0){
-                div.innerText = 'Сохранение прошло успешно';
-                div.classList.add('alert-success');
-            }else{
+                window.location.replace('http://handbook/web/');
+            }else {
                 div.innerText = result.errors.message;
                 div.classList.add('alert-danger');
             }
             div_success.appendChild(div);
+
         }
+
     }
 
     
+}
+
+
+function DeletePeople(people_id){
+    let url = 'http://handbook/web/people-hand-book/delete-people?people_id='+people_id;
+
+    let response = fetch(url);
+    let json = {
+        'data':{},
+        'errors':{}
+    };
+    console.log(response.json());
+    if(response.ok){
+        let tr = document.getElementById('people_id');
+        tr.remove();
+    }
 }

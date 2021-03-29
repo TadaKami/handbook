@@ -9,9 +9,14 @@ use app\controllers\SiteController;
 
 class PeopleHandBookController extends \yii\web\Controller
 {
-    public function actionIndex()
+    public $enableCsrfValidation = false;
+    public function actionIndex($params = null)
     {
-        return $this->render('index');
+        if ($params) {
+            return $this->render('index', $params);
+        }else {
+            return $this->render('index');
+        }
     }
     #region Список методов контроллера
         // actionAddEditPeople - метод добавления/редактирования людей
@@ -35,16 +40,25 @@ class PeopleHandBookController extends \yii\web\Controller
         $data = array();
         $errors = array();
         try {
-            $post_data = $_GET;
-            $name = $post_data['name']?:'Empty name';
-            $second_name = $post_data['second_name']?:'Empty second name';
+            $post_data = json_decode(file_get_contents('php://input'));
+            if(
+            !property_exists($post_data,'name') ||
+            !property_exists($post_data,'second_name') ||
+            !property_exists($post_data,'address') ||
+            !property_exists($post_data,'date_birthday')
+            ){
+                $data = $post_data;
+                throw new Exception('Пришло не достаточно данных для добавления/редактирования');
+            }
+            $name = $post_data->name?:'Empty name';
+            $second_name = $post_data->second_name?:'Empty second name';
             $data = $post_data;
-            if (!isset($post_data['address']) || empty($post_data['address'])){
+            if (!isset($post_data->address) || empty($post_data->address)){
                 throw new Exception('Адрес не может быть пустым');
             }
-            $address = $post_data['address'];
-            if(isset($post_data['people_id']) && !empty($post_data['people_id'])){
-                $people  = PeopleHandbook::findOne(['id'=>$post_data['people_id']]);
+            $address = $post_data->address;
+            if(isset($post_data->people_id) && !empty($post_data->people_id)){
+                $people  = PeopleHandbook::findOne(['id'=>$post_data->people_id]);
                 if(empty($people)){
                     throw new Exception('Человек не найден');
                 }
@@ -67,16 +81,10 @@ class PeopleHandBookController extends \yii\web\Controller
              *      Да?     Конвертируем в формат даты MySQL и записываем в поле даты регистрации
              *      Нет?    В поле даты регистрации записываем текущую дату
              */
-            $people->date_birthday = (isset($post_data['date_birthday']) && !empty($post_data['date_birthday']))?date('Y-m-d',strtotime($post_data['date_birthday'])):date('Y-m-d');
+            $people->date_birthday = (isset($post_data->date_birthday) && !empty($post_data->date_birthday))?date('Y-m-d',strtotime($post_data->date_birthday)):date('Y-m-d');
             if(!$people->save()){
                 throw new Exception($people->getErrors());
             }
-            $people->refresh();
-            $data['people_id'] = $people->id;
-            $data['name'] = $people->name;
-            $data['second_name'] = $people->second_name;
-            $data['address'] = $people->address;
-            $data['date_birthday'] = $people->date_birthday;
             unset($people, $post_data);
 
         } catch (\Throwable $exception) {
@@ -115,7 +123,7 @@ class PeopleHandBookController extends \yii\web\Controller
                 $date_birthday = date('Y-m-d',strtotime($_GET['date_birthday']));
             }
             $peoples_handbook = PeopleHandbook::find()
-                ->select(['id as people_id', 'name', 'second_name', 'date_birthday'])
+                ->select(['id as people_id', 'name', 'second_name', 'date_birthday','address'])
                 ->filterWhere(['<=','date_birthday',$date_birthday])
                 ->asArray()
                 ->all();
@@ -127,6 +135,7 @@ class PeopleHandBookController extends \yii\web\Controller
                 $data[$counter]['#'] = $people['people_id'];
                 $data[$counter]['Имя'] = $people['name'];
                 $data[$counter]['Фамилия'] = $people['second_name'];
+                $data[$counter]['Адрес'] = $people['address'];
                 $data[$counter]['Дата рождения'] = $people['date_birthday'];
                 $counter++;
             }
@@ -154,13 +163,64 @@ class PeopleHandBookController extends \yii\web\Controller
         $data = array();
         $errors = array();
         try {
+            if(empty($people_id)){
+                $people_id = $_GET['people_id'];
+            }
             $delete_people = PeopleHandbook::deleteAll(['id'=>$people_id]);
         } catch (\Throwable $exception) {
             $errors[] = 'Method ' . __FUNCTION__ . ' generate exception';
             $errors[] = $exception->getMessage();
             $errors[] = $exception->getLine();
         }
-        return array('data' => $data, 'errors' => $errors);
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return [
+            'data' => $data,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * actionCompatEditData -
+     * Входные данные:
+     *
+     * @return string
+     */
+    public function actionCompatEditData($data_post = NULL)
+    {
+        $data = array();
+        $errors = array();
+        try {
+            $post_data = $_POST;
+            if((isset($post_data['people_id']) && !empty($post_data['people_id']))||
+                (isset($post_data['name']) && !empty($post_data['name']))||
+                (isset($post_data['second_name']) && !empty($post_data['second_name']))||
+                (isset($post_data['address']) && !empty($post_data['address']))||
+                (isset($post_data['date_birthday']) && !empty($post_data['date_birthday']))
+            ){
+
+            }else{
+                throw new Exception('Пришло не достаточно данных для редактирования');
+            }
+
+            $return_data = [
+                'people_id'=>$post_data['people_id'],
+                'name'=>$post_data['name'],
+                'second_name'=>$post_data['second_name'],
+                'address'=>$post_data['address'],
+                'date_birthday'=>$post_data['date_birthday']
+            ];
+            return $this->redirect(array('/people-hand-book/index', $return_data));
+        } catch (\Throwable $exception) {
+            $errors[] = 'Method ' . __FUNCTION__ . ' generate exception';
+            $errors[] = $exception->getMessage();
+            $errors[] = $exception->getLine();
+        }
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return [
+            'data' => $data,
+            'errors' => $errors,
+        ];
+        //TODO придумать тут что-то получше, выглядит убого
     }
 
     /**
